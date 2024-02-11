@@ -1,4 +1,4 @@
-import { Edge } from "@repo/db";
+import prisma from "./db";
 
 interface Recipe {
   first: string;
@@ -7,7 +7,7 @@ interface Recipe {
 }
 
 export default class Finder {
-  private prisma = new Edge.PrismaClient();
+  private prisma = prisma;
   private DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
 
   async findItem(targetItem: string): Promise<Recipe[]> {

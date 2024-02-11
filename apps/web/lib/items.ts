@@ -1,7 +1,6 @@
-import { Edge } from "@repo/db";
+import prisma from "./db";
 
 export async function getItemList() {
-  const prisma = new Edge.PrismaClient();
   const items = await prisma.recipe.groupBy({
     by: ["result"],
   });
