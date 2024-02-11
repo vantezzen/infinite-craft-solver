@@ -1,4 +1,4 @@
-import { Step } from "@/app/page";
+import { Step } from "./App";
 import React from "react";
 
 function Item({ name }: { name: string }) {
