@@ -40,6 +40,9 @@ export default class Finder {
         where: {
           result: item,
         },
+        cacheStrategy: {
+          ttl: 60 * 60 * 24,
+        },
       })
     ).map((recipe) => ({
       first: recipe.first,
