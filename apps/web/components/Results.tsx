@@ -22,7 +22,19 @@ async function Results({ item }: { item: string }) {
 
   return (
     <>
-      {notFound && <div>Item not found</div>}
+      {notFound && (
+        <div className="flex justify-center">
+          <div className="text-center max-w-xl">
+            <h2 className="font-bold text-lg">Item not found</h2>
+
+            <div className="text-zinc-500 font-medium text-sm mt-3">
+              We are constantly searching new recipes but couldn't find this
+              item in our database yet. You might want to check again later to
+              see if we have discovered it.
+            </div>
+          </div>
+        </div>
+      )}
       {!notFound && <Path steps={path} />}
     </>
   );
