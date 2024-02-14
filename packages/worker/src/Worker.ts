@@ -34,7 +34,11 @@ export default class Worker {
 
   private async runThread() {
     while (true) {
-      const item = await this.prisma.queueItem.findFirst();
+      const recipeCount = await this.prisma.queueItem.count();
+      const skip = Math.floor(Math.random() * recipeCount);
+      const item = await this.prisma.queueItem.findFirst({
+        skip,
+      });
       if (!item) {
         console.log("No items in queue - stopping worker");
         return;
@@ -155,6 +159,7 @@ export default class Worker {
     const existingItems = [
       ...existingItemsResult.map((item) => item.result),
       ...DEFAULT_ITEMS,
+      item,
     ];
 
     for (const existingItem of existingItems) {

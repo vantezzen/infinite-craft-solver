@@ -9,12 +9,12 @@ export default async function getStatus() {
   const items = await prisma.recipe.groupBy({
     by: ["result"],
     cacheStrategy: {
-      ttl: 60 * 60,
+      ttl: 10,
     },
   });
   const queued = await prisma.queueItem.count({
     cacheStrategy: {
-      ttl: 60 * 60,
+      ttl: 10,
     },
   });
 
