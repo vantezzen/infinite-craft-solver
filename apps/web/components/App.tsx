@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { Skeleton } from "./ui/skeleton";
 import Results from "./Results";
 import Footer from "./Footer";
+import Info from "./Info";
 
 export interface Step {
   first: string;
@@ -19,7 +20,7 @@ async function App({ item }: { item?: string }) {
       <div>
         <Header items={items} item={item} />
 
-        {item && (
+        {item ? (
           <Suspense
             fallback={
               <div className="flex justify-center">
@@ -29,6 +30,8 @@ async function App({ item }: { item?: string }) {
           >
             <Results item={item} />
           </Suspense>
+        ) : (
+          <Info />
         )}
       </div>
 
