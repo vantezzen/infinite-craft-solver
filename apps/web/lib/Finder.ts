@@ -51,6 +51,11 @@ export default class Finder {
     }));
 
     for (const recipe of recipes) {
+      if (recipe.first === "Nothing" || recipe.second === "Nothing") {
+        // "Nothing" is not a valid item, so ignore this recipe
+        continue;
+      }
+
       // Recursively find recipes for first and second ingredients if they are not default items
       const pathsForFirst = await this.recursiveFind(
         recipe.first,

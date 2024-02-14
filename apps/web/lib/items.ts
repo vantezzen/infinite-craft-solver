@@ -5,5 +5,5 @@ export async function getItemList() {
     by: ["result"],
   });
 
-  return items.map((item) => item.result);
+  return items.map((item) => item.result).filter((item) => item !== "Nothing");
 }
