@@ -1,4 +1,5 @@
 import prisma from "./db";
+import { kv } from "@vercel/kv";
 
 interface Recipe {
   first: string;
@@ -16,12 +17,23 @@ export default class Finder {
       return [];
     }
 
+    const cachePath = `recipe-${targetItem}`;
+    const cachedPath = await kv.get<Recipe[]>(cachePath);
+    if (cachedPath) {
+      return cachedPath;
+    }
+
     // Start with a recursive search for the target item
     const path = await this.recursiveFind(targetItem, new Set<string>());
     if (!path) {
       throw new Error("Item cannot be crafted");
     }
-    return this.removeDuplicates(path);
+    const finalPath = this.removeDuplicates(path);
+
+    await kv.set(cachePath, finalPath, {
+      ex: 60 * 60 * 48,
+    });
+    return finalPath;
   }
 
   private async recursiveFind(
