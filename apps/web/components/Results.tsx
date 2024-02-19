@@ -1,7 +1,6 @@
 "use client";
 import Path from "@/components/Path";
 import Finder from "@/lib/Finder";
-import createResource from "@/lib/suspense";
 import React, { useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 
