@@ -1,9 +1,11 @@
-import prisma from "./db";
+import { sql } from "@vercel/postgres";
 
 export async function getItemList() {
-  const items = await prisma.recipe.groupBy({
-    by: ["result"],
-  });
+  const items = await sql<{ result: string }>`
+    SELECT DISTINCT result FROM "Recipe"
+  `;
 
-  return items.map((item) => item.result).filter((item) => item !== "Nothing");
+  return items.rows
+    .map((item) => item.result)
+    .filter((item) => item !== "Nothing");
 }

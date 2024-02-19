@@ -1,26 +1,24 @@
-import prisma from "./db";
+import { sql } from "@vercel/postgres";
 
 export default async function getStatus() {
-  const recipes = await prisma.recipe.count({
-    cacheStrategy: {
-      ttl: 60 * 60,
-    },
-  });
-  const items = await prisma.recipe.groupBy({
-    by: ["result"],
-    cacheStrategy: {
-      ttl: 10,
-    },
-  });
-  const queued = await prisma.queueItem.count({
-    cacheStrategy: {
-      ttl: 10,
-    },
-  });
+  const recipeInfo = await sql<{ count: number }>`
+    SELECT COUNT(*) FROM "Recipe"
+  `;
+  const recipes = recipeInfo.rows[0]!.count;
+
+  const itemInfo = await sql<{ result: string }>`
+    SELECT DISTINCT result FROM "Recipe"
+  `;
+  const items = itemInfo.rows.length;
+
+  const queuedInfo = await sql<{ count: number }>`
+    SELECT COUNT(*) FROM "QueueItem"
+  `;
+  const queued = queuedInfo.rows[0]!.count;
 
   return {
     recipes,
-    items: items.length,
+    items: items,
     queued,
   };
 }

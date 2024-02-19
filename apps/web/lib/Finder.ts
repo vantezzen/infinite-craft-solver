@@ -1,5 +1,5 @@
-import prisma from "./db";
 import { kv } from "@vercel/kv";
+import { sql } from "@vercel/postgres";
 
 interface Recipe {
   first: string;
@@ -8,7 +8,6 @@ interface Recipe {
 }
 
 export default class Finder {
-  private prisma = prisma;
   private DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
 
   async findItem(targetItem: string): Promise<Recipe[]> {
@@ -20,7 +19,7 @@ export default class Finder {
     const cachePath = `recipe-${targetItem}`;
     const cachedPath = await kv.get<Recipe[]>(cachePath);
     if (cachedPath) {
-      return cachedPath;
+      // return cachedPath;
     }
 
     // Start with a recursive search for the target item
@@ -47,16 +46,12 @@ export default class Finder {
 
     visited.add(item);
 
-    const recipes = (
-      await this.prisma.recipe.findMany({
-        where: {
-          result: item,
-        },
-        cacheStrategy: {
-          ttl: 60 * 60 * 24,
-        },
-      })
-    ).map((recipe) => ({
+    const recipeResult = await sql<Recipe>`
+      SELECT * FROM "Recipe"
+      WHERE result = ${item}
+    `;
+
+    const recipes = recipeResult.rows.map((recipe) => ({
       first: recipe.first,
       second: recipe.second,
       result: recipe.result,
