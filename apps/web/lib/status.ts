@@ -26,11 +26,17 @@ export default async function getStatus() {
   `;
   const queuedPastHour = queuedPastHourInfo.rows[0]!.count;
 
+  const newestItemNameInfo = await sql<{ result: string }>`
+  SELECT "result" FROM "Recipe" GROUP BY "result" ORDER BY MIN("createdAt") DESC LIMIT 1
+  `;
+  const newestItemName = newestItemNameInfo.rows[0]!.result;
+
   return {
     recipes,
     items: items,
     queued,
     recipesInPastHour,
     queuedPastHour,
+    newestItemName,
   };
 }
