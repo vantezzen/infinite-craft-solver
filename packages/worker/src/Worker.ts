@@ -18,11 +18,7 @@ export default class Worker {
       await this.kickstart();
     }
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: "/usr/bin/chromium",
-      args: ["--no-sandbox"],
-    });
+    const browser = await puppeteer.launch();
     this.page = await browser.newPage();
     await this.page.goto("https://neal.fun/infinite-craft/");
     await new Promise((resolve) => setTimeout(resolve, 5000));
