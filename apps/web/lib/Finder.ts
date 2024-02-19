@@ -19,7 +19,7 @@ export default class Finder {
     const cachePath = `recipe-${targetItem}`;
     const cachedPath = await kv.get<Recipe[]>(cachePath);
     if (cachedPath) {
-      // return cachedPath;
+      return cachedPath;
     }
 
     // Start with a recursive search for the target item
