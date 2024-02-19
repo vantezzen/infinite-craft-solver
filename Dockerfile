@@ -5,7 +5,7 @@ RUN apt-get install chromium -y
 RUN mkdir -p /app
 WORKDIR /app
 COPY . .
-RUN npm install -g pnpm
+RUN curl -fsSL https://get.pnpm.io/install.sh | sh -
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 RUN pnpm install
 CMD [ "pnpm", "dlx", "turbo", "worker:run" ]
