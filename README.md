@@ -22,6 +22,9 @@ pnpm dlx turbo dev
 
 # Build production
 pnpm dlx turbo build
+
+# Run worker in background
+pm2 start "pnpm dlx turbo worker:run"
 ```
 
 The project needs a running PostgreSQL database to work. To set this up, create `.env` in `packages/db` and insert the configuration for a PostgreSQL database.

@@ -1,5 +1,8 @@
+"use client";
 import { Step } from "./App";
 import React from "react";
+import { Button } from "./ui/button";
+import { Copy } from "lucide-react";
 
 function Item({ name }: { name: string }) {
   return (
@@ -33,6 +36,22 @@ function Path({ steps }: { steps: Step[] }) {
             </React.Fragment>
           ))}
         </div>
+
+        <Button
+          onClick={() => {
+            navigator.clipboard.writeText(
+              steps
+                .map(
+                  (step) => `${step.first} + ${step.second} = ${step.result}`
+                )
+                .join("\n")
+            );
+          }}
+          className="flex items-center gap-2"
+        >
+          <Copy size={14} />
+          Copy to clipboard
+        </Button>
       </div>
     </div>
   );

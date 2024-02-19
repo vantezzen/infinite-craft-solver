@@ -18,7 +18,11 @@ export default class Worker {
       await this.kickstart();
     }
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: "/usr/bin/chromium-browser",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     this.page = await browser.newPage();
     await this.page.goto("https://neal.fun/infinite-craft/");
     await this.page.waitForSelector(".mobile-sound");
