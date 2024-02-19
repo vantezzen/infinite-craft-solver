@@ -1,6 +1,9 @@
+"use client";
 import Path from "@/components/Path";
 import Finder from "@/lib/Finder";
-import React from "react";
+import createResource from "@/lib/suspense";
+import React, { useEffect } from "react";
+import { Skeleton } from "./ui/skeleton";
 
 export interface Step {
   first: string;
@@ -8,21 +11,48 @@ export interface Step {
   result: string;
 }
 
-async function Results({ item }: { item: string }) {
-  let path: Step[] = [];
-  let notFound = false;
-  if (item) {
+function Results({ item }: { item: string }) {
+  const [path, setPath] = React.useState<Step[] | null>(null);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  useEffect(() => {
     const finder = new Finder();
-    try {
-      path = await finder.findItem(item);
-    } catch (error) {
-      notFound = true;
-    }
+
+    finder
+      .findItem(item)
+      .then((path) => {
+        setPath(path);
+      })
+      .catch((error) => {
+        setError(error);
+      });
+  }, [item]);
+
+  if (error) {
+    return (
+      <div className="flex justify-center">
+        <div className="text-center max-w-xl">
+          <h2 className="font-bold text-lg">Error</h2>
+
+          <div className="text-zinc-500 font-medium text-sm mt-3">
+            {error.message}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!path) {
+    return (
+      <div className="flex justify-center">
+        <Skeleton className="w-[500px] h-[300px] animate-pulse" />
+      </div>
+    );
   }
 
   return (
     <>
-      {notFound && (
+      {!path && (
         <div className="flex justify-center">
           <div className="text-center max-w-xl">
             <h2 className="font-bold text-lg">Item not found</h2>
@@ -35,7 +65,7 @@ async function Results({ item }: { item: string }) {
           </div>
         </div>
       )}
-      {!notFound && <Path steps={path} />}
+      {path && <Path steps={path} />}
     </>
   );
 }

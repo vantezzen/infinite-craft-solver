@@ -20,19 +20,7 @@ async function App({ item }: { item?: string }) {
       <div>
         <Header items={items} item={item} />
 
-        {item ? (
-          <Suspense
-            fallback={
-              <div className="flex justify-center">
-                <Skeleton className="w-[500px] h-[300px] animate-pulse" />
-              </div>
-            }
-          >
-            <Results item={item} />
-          </Suspense>
-        ) : (
-          <Info />
-        )}
+        {item ? <Results item={item} /> : <Info />}
       </div>
 
       <Footer />

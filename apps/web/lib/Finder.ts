@@ -1,6 +1,3 @@
-import { kv } from "@vercel/kv";
-import { sql } from "@vercel/postgres";
-
 interface Recipe {
   first: string;
   second: string;
@@ -14,30 +11,21 @@ export default class Finder {
   private recipesLoaded: boolean = false; // Flag to check if recipes are loaded
 
   private async loadRecipes(): Promise<void> {
-    let offset = 0;
-    const limit = 500; // Fetch 500 recipes at a time
-    let hasMore = true;
+    const response = await fetch("/api/recipes");
 
-    while (hasMore) {
-      const recipeResult = await sql<Recipe>`
-        SELECT * FROM "Recipe"
-        ORDER BY result
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      if (recipeResult.rows.length > 0) {
-        this.recipes.push(...recipeResult.rows);
-        offset += recipeResult.rows.length;
-
-        for (const recipe of recipeResult.rows) {
-          if (!this.recipeMap.has(recipe.result)) {
-            this.recipeMap.set(recipe.result, []);
-          }
-          this.recipeMap.get(recipe.result)!.push(recipe);
-        }
-      } else {
-        hasMore = false; // No more recipes to fetch
-      }
+    if (!response.ok) {
+      throw new Error("Failed to load recipes");
     }
+
+    this.recipes = await response.json();
+
+    for (const recipe of this.recipes) {
+      if (!this.recipeMap.has(recipe.result)) {
+        this.recipeMap.set(recipe.result, []);
+      }
+      this.recipeMap.get(recipe.result)!.push(recipe);
+    }
+
     this.recipesLoaded = true;
   }
 
@@ -46,23 +34,17 @@ export default class Finder {
       return [];
     }
 
-    const cachePath = `recipe-${targetItem}`;
-    const cachedPath = await kv.get<Recipe[]>(cachePath);
-    if (cachedPath) {
-      return cachedPath;
-    }
-
     if (!this.recipesLoaded) {
       await this.loadRecipes();
     }
+
+    console.log(`Loaded ${this.recipes.length} recipes`);
 
     // Use a cache or directly proceed with the search if not available
     const path = this.findShortestPath(targetItem);
     if (!path) {
       throw new Error("Item cannot be crafted");
     }
-
-    await kv.set(cachePath, path, { ex: 60 * 60 * 48 });
 
     return path;
   }
