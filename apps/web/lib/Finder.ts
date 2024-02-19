@@ -11,7 +11,9 @@ export default class Finder {
   private recipesLoaded: boolean = false; // Flag to check if recipes are loaded
 
   private async loadRecipes(): Promise<void> {
-    const response = await fetch("/api/recipes");
+    const response = await fetch("/api/recipes", {
+      cache: "force-cache",
+    });
 
     if (!response.ok) {
       throw new Error("Failed to load recipes");
