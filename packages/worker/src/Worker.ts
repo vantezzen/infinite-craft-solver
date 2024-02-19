@@ -20,12 +20,12 @@ export default class Worker {
 
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: "/usr/bin/chromium-browser",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: "/usr/bin/chromium",
+      args: ["--no-sandbox"],
     });
     this.page = await browser.newPage();
     await this.page.goto("https://neal.fun/infinite-craft/");
-    await this.page.waitForSelector(".mobile-sound");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     for (let i = 0; i < THREAD_COUNT; i++) {
       await this.runThread();
