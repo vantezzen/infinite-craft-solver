@@ -6,6 +6,7 @@ import {
   Card,
 } from "@/components/ui/card";
 import getStatus from "@/lib/status";
+import { ChevronUp } from "lucide-react";
 
 export default async function Status() {
   const status = await getStatus();
@@ -18,7 +19,13 @@ export default async function Status() {
             {status.recipes.toLocaleString()}
           </CardTitle>
           <CardDescription className="text-center">
-            Total Recipes
+            <p className="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400 text-center">
+              Total recipes
+              <br />
+              <span className="text-xs font-normal">
+                +{status.recipesInPastHour.toLocaleString()} past hour
+              </span>
+            </p>
           </CardDescription>
         </CardHeader>
         <CardContent className="border-t pt-6">
@@ -27,7 +34,7 @@ export default async function Status() {
               <h3 className="text-2xl font-bold">
                 {status.items.toLocaleString()}
               </h3>
-              <p className="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400 text-center">
                 Total Items
               </p>
             </div>
@@ -35,8 +42,12 @@ export default async function Status() {
               <h3 className="text-2xl font-bold">
                 {status.queued.toLocaleString()}
               </h3>
-              <p className="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400 text-center">
                 Recipes Queued
+                <br />
+                <span className="text-xs font-normal">
+                  +{status.queuedPastHour.toLocaleString()} past hour
+                </span>
               </p>
             </div>
           </div>

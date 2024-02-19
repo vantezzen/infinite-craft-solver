@@ -29,6 +29,7 @@ pm2 start "pnpm dlx turbo worker:run"
 # When running on a server, use xvfb to run the worker
 sudo apt-get install xvfb
 xvfb-run --auto-servernum pnpm dlx turbo worker:run
+pm2 start "xvfb-run --auto-servernum pnpm dlx turbo worker:run" --name ics-worker
 ```
 
 The project needs a running PostgreSQL database to work. To set this up, create `.env` in `packages/db` and insert the configuration for a PostgreSQL database.

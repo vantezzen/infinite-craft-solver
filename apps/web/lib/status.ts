@@ -16,9 +16,21 @@ export default async function getStatus() {
   `;
   const queued = queuedInfo.rows[0]!.count;
 
+  const recipesInPastHourInfo = await sql<{ count: number }>`
+    SELECT COUNT(*) FROM "Recipe" WHERE "createdAt" > NOW() - INTERVAL '1 hour'
+  `;
+  const recipesInPastHour = recipesInPastHourInfo.rows[0]!.count;
+
+  const queuedPastHourInfo = await sql<{ count: number }>`
+    SELECT COUNT(*) FROM "QueueItem" WHERE "createdAt" > NOW() - INTERVAL '1 hour'
+  `;
+  const queuedPastHour = queuedPastHourInfo.rows[0]!.count;
+
   return {
     recipes,
     items: items,
     queued,
+    recipesInPastHour,
+    queuedPastHour,
   };
 }
