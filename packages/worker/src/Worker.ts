@@ -18,7 +18,17 @@ export default class Worker {
       await this.kickstart();
     }
 
-    const browser = await puppeteer.launch();
+    const browserOptions = process.env.LOCAL_ENV
+      ? {
+          headless: false,
+        }
+      : {
+          headless: false,
+          executablePath: "/usr/bin/chromium-browser",
+          args: ["--no-sandbox"],
+        };
+
+    const browser = await puppeteer.launch(browserOptions);
     this.page = await browser.newPage();
     await this.page.goto("https://neal.fun/infinite-craft/");
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -69,6 +79,7 @@ export default class Worker {
         await this.findOutRecipe(item.first, item.second);
       } catch (e) {
         console.error("Failed to fetch recipe", e, item);
+        return;
       }
 
       process.off("SIGINT", exitClean);
