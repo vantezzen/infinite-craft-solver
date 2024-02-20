@@ -1,8 +1,8 @@
 "use client";
-import { Step } from "./App";
 import React from "react";
 import { Button } from "./ui/button";
 import { Copy } from "lucide-react";
+import { Recipe } from "@/lib/Finder";
 
 function Item({ name }: { name: string }) {
   return (
@@ -12,7 +12,7 @@ function Item({ name }: { name: string }) {
   );
 }
 
-function Path({ steps }: { steps: Step[] }) {
+function Path({ steps }: { steps: Recipe[] }) {
   return (
     <div className="flex justify-center">
       <div className="p-12 flex flex-col gap-6 justify-center border rounded-lg">
