@@ -1,11 +1,5 @@
+import type { Recipe } from "@/lib/Finder";
 import { sql } from "@vercel/postgres";
-import { kv } from "@vercel/kv";
-
-interface Recipe {
-  first: string;
-  second: string;
-  result: string;
-}
 
 export async function GET() {
   const recipeResult = await sql<Recipe>`

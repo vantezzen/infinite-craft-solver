@@ -1,20 +1,24 @@
 "use client";
 import Path from "@/components/Path";
-import Finder from "@/lib/Finder";
+import Finder, { Recipe } from "@/lib/Finder";
 import React, { useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 
-export interface Step {
-  first: string;
-  second: string;
-  result: string;
-}
-
-function Results({ item }: { item: string }) {
-  const [path, setPath] = React.useState<Step[] | null>(null);
+function Results({
+  item,
+  path: precalculatedPath,
+}: {
+  item: string;
+  path: Recipe[] | null;
+}) {
+  const [path, setPath] = React.useState<Recipe[] | null>(precalculatedPath);
   const [error, setError] = React.useState<Error | null>(null);
 
   useEffect(() => {
+    if (precalculatedPath) {
+      return;
+    }
+
     const finder = new Finder();
 
     finder

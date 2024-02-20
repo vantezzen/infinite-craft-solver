@@ -1,4 +1,4 @@
-interface Recipe {
+export interface Recipe {
   first: string;
   second: string;
   result: string;
