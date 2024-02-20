@@ -1,3 +1,5 @@
+import { decompressRecipes } from "./compression";
+
 export interface Recipe {
   first: string;
   second: string;
@@ -33,7 +35,12 @@ export default class Finder {
       throw new Error("Failed to load recipes");
     }
 
-    this.recipes = await response.json();
+    const recipes = await response.json();
+    if ("compressed" in recipes && recipes.compressed) {
+      this.recipes = decompressRecipes(recipes);
+    } else {
+      this.recipes = recipes;
+    }
 
     for (const recipe of this.recipes) {
       if (!this.recipeMap.has(recipe.result)) {

@@ -1,4 +1,5 @@
 import type { Recipe } from "@/lib/Finder";
+import { compressRecipes } from "@/lib/compression";
 import { sql } from "@vercel/postgres";
 
 export async function GET() {
@@ -12,5 +13,5 @@ export async function GET() {
     second: row.second,
     result: row.result,
   }));
-  return Response.json(recipes);
+  return Response.json(compressRecipes(recipes));
 }
