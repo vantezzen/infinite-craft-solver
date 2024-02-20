@@ -9,8 +9,6 @@ import getStatus from "@/lib/status";
 import { ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
 export default async function Status() {
   const status = await getStatus();
 
