@@ -1,13 +1,17 @@
 "use client";
-import Finder from "@/lib/Finder";
+import Finder, { FinderPhase, FinderProgess } from "@/lib/Finder";
 import React from "react";
 import { Button } from "./ui/button";
 
 function Precalculate({ items }: { items: string[] }) {
   const [currentItem, setCurrentItem] = React.useState<string | null>(null);
+  const [progress, setProgress] = React.useState<FinderProgess>({
+    current: 0,
+    phase: FinderPhase.Search,
+  });
 
   const startPrecalculation = async () => {
-    const finder = new Finder();
+    const finder = new Finder(setProgress);
     const itemQueue = [...items].sort(() => Math.random() - 0.5);
 
     for (const item of itemQueue) {
@@ -25,7 +29,6 @@ function Precalculate({ items }: { items: string[] }) {
           },
           body: JSON.stringify({ path }),
         });
-        window.location.reload();
       } catch (error) {
         console.error("Could not precalculate", error);
       }
@@ -41,6 +44,11 @@ function Precalculate({ items }: { items: string[] }) {
       {currentItem && (
         <div>
           <p>Precalculating "{currentItem}"</p>
+          <p>
+            {progress.phase === FinderPhase.Search && "Searching"}
+            {progress.phase === FinderPhase.Backtrack && "Reducing recipe"}
+          </p>
+          <p>{progress.current} recipes searched</p>
         </div>
       )}
     </div>
