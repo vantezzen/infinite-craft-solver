@@ -1,6 +1,6 @@
 "use client";
 import Path from "@/components/Path";
-import Finder, { Recipe } from "@/lib/Finder";
+import Finder, { FinderPhase, FinderProgess, Recipe } from "@/lib/Finder";
 import React, { useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 
@@ -13,13 +13,17 @@ function Results({
 }) {
   const [path, setPath] = React.useState<Recipe[] | null>(precalculatedPath);
   const [error, setError] = React.useState<Error | null>(null);
+  const [progress, setProgress] = React.useState<FinderProgess>({
+    current: 0,
+    phase: FinderPhase.Search,
+  });
 
   useEffect(() => {
     if (precalculatedPath) {
       return;
     }
 
-    const finder = new Finder();
+    const finder = new Finder(setProgress);
 
     finder
       .findItem(item)
@@ -48,7 +52,16 @@ function Results({
   if (!path) {
     return (
       <div className="flex justify-center">
-        <Skeleton className="w-[500px] h-[300px] animate-pulse" />
+        <Skeleton>
+          <div className="w-[500px] h-[300px] flex flex-col gap-3 justify-center items-center">
+            <p className="font-medium">
+              {progress.phase === FinderPhase.Search && "Searching"}
+              {progress.phase === FinderPhase.Backtrack && "Reducing recipe"}
+            </p>
+
+            <p className="text-lg font-bold">{progress.current} recipes</p>
+          </div>
+        </Skeleton>
       </div>
     );
   }

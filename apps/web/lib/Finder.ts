@@ -4,11 +4,25 @@ export interface Recipe {
   result: string;
 }
 
+export enum FinderPhase {
+  Search,
+  Backtrack,
+}
+
+export interface FinderProgess {
+  current: number;
+  phase: FinderPhase;
+}
+
 export default class Finder {
   private DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
   private recipes: Recipe[] = []; // Array to store all recipes
   private recipeMap: Map<string, Recipe[]> = new Map(); // Map to store recipes for each item
   private recipesLoaded: boolean = false; // Flag to check if recipes are loaded
+
+  constructor(
+    private onProgress: (progress: FinderProgess) => void = () => {}
+  ) {}
 
   private async loadRecipes(): Promise<void> {
     const response = await fetch("/api/recipes", {
@@ -43,7 +57,7 @@ export default class Finder {
     console.log(`Loaded ${this.recipes.length} recipes`);
 
     // Use a cache or directly proceed with the search if not available
-    const path = this.findShortestPath(targetItem);
+    const path = await this.findShortestPath(targetItem);
     if (!path) {
       throw new Error("Item cannot be crafted");
     }
@@ -51,7 +65,7 @@ export default class Finder {
     return path;
   }
 
-  private findShortestPath(targetItem: string): Recipe[] | null {
+  private async findShortestPath(targetItem: string): Promise<Recipe[] | null> {
     const itemQueue: {
       item: string;
       recipe: Recipe | null;
@@ -61,13 +75,23 @@ export default class Finder {
     }));
     const recipesUsed = new Set<Recipe>();
     const discoveredItems = new Set<string>(this.DEFAULT_ITEMS);
+    let itemsProcessed = 0;
+
+    const updateInterval = setInterval(() => {
+      this.onProgress({
+        current: itemsProcessed,
+        phase: FinderPhase.Search,
+      });
+    }, 100);
 
     while (itemQueue.length > 0) {
+      itemsProcessed++;
       const { item, recipe } = itemQueue.shift()!;
 
       if (item === targetItem) {
         console.log("Found path", recipesUsed.size);
-        return this.backtrackPath(targetItem, recipe, [...recipesUsed]);
+        clearInterval(updateInterval);
+        return await this.backtrackPath(targetItem, recipe, [...recipesUsed]);
       }
 
       this.recipes
@@ -97,16 +121,19 @@ export default class Finder {
             recipe,
           });
         });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
+    clearInterval(updateInterval);
     return null;
   }
 
-  private backtrackPath(
+  private async backtrackPath(
     targetItem: string,
     recipe: Recipe | null,
     recipesUsed: Recipe[]
-  ): Recipe[] {
+  ): Promise<Recipe[]> {
     if (!recipe) {
       return [];
     }
@@ -116,6 +143,19 @@ export default class Finder {
     const recipes: Recipe[] = [recipe];
     const itemQueue = [recipe?.first, recipe?.second];
     const discoveredItems = new Set<string>([targetItem]);
+
+    const updateInfo = () => {
+      this.onProgress({
+        current: recipes.length,
+        phase: FinderPhase.Backtrack,
+      });
+    };
+
+    const updateInterval = setInterval(() => {
+      updateInfo();
+    }, 50);
+    updateInfo();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     while (itemQueue.length > 0) {
       const item = itemQueue.shift()!;
@@ -135,8 +175,11 @@ export default class Finder {
       discoveredItems.add(recipeUsedForItem.first);
       discoveredItems.add(recipeUsedForItem.second);
       itemQueue.push(recipeUsedForItem.first, recipeUsedForItem.second);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
+    clearInterval(updateInterval);
     return this.removeDuplicates(recipes.reverse());
   }
 

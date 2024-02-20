@@ -25,6 +25,7 @@ function Precalculate({ items }: { items: string[] }) {
           },
           body: JSON.stringify({ path }),
         });
+        window.location.reload();
       } catch (error) {
         console.error("Could not precalculate", error);
       }
