@@ -55,6 +55,7 @@ function Header({ items, item }: { items: string[]; item?: string }) {
                 .filter((item) =>
                   item.toLowerCase().includes(query.toLowerCase())
                 )
+                .slice(0, 10)
                 .map((item) => (
                   <div
                     key={item}
