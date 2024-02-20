@@ -21,6 +21,7 @@ export default class Finder {
   private recipes: Recipe[] = []; // Array to store all recipes
   private recipeMap: Map<string, Recipe[]> = new Map(); // Map to store recipes for each item
   private recipesLoaded: boolean = false; // Flag to check if recipes are loaded
+  public items = new Set<string>(this.DEFAULT_ITEMS);
 
   constructor(
     private onProgress: (progress: FinderProgess) => void = () => {}
@@ -37,8 +38,14 @@ export default class Finder {
 
     const recipes = await response.json();
     if ("compressed" in recipes && recipes.compressed) {
+      this.items = new Set(recipes.items);
       this.recipes = decompressRecipes(recipes);
     } else {
+      this.items = new Set<string>(
+        recipes
+          .map((recipe: Recipe) => [recipe.first, recipe.second, recipe.result])
+          .flat()
+      );
       this.recipes = recipes;
     }
 
@@ -59,6 +66,10 @@ export default class Finder {
 
     if (!this.recipesLoaded) {
       await this.loadRecipes();
+    }
+
+    if (!this.items.has(targetItem)) {
+      throw new Error("Item not found");
     }
 
     console.log(`Loaded ${this.recipes.length} recipes`);

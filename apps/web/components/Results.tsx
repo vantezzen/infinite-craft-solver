@@ -3,6 +3,7 @@ import Path from "@/components/Path";
 import Finder, { FinderPhase, FinderProgess, Recipe } from "@/lib/Finder";
 import React, { useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
+import NotFound from "./NotFound";
 
 function Results({
   item,
@@ -13,6 +14,7 @@ function Results({
 }) {
   const [path, setPath] = React.useState<Recipe[] | null>(precalculatedPath);
   const [error, setError] = React.useState<Error | null>(null);
+  const [finder, setFinder] = React.useState<Finder | null>(null);
   const [progress, setProgress] = React.useState<FinderProgess>({
     current: 0,
     phase: FinderPhase.Search,
@@ -24,6 +26,7 @@ function Results({
     }
 
     const finder = new Finder(setProgress);
+    setFinder(finder);
 
     finder
       .findItem(item)
@@ -34,6 +37,10 @@ function Results({
         setError(error);
       });
   }, [item]);
+
+  if (error && !finder?.items.has(item)) {
+    return <NotFound item={item} finder={finder!} />;
+  }
 
   if (error) {
     return (
