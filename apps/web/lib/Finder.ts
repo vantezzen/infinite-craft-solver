@@ -80,6 +80,16 @@ export default class Finder {
       throw new Error("Item cannot be crafted");
     }
 
+    fetch("/api/report", {
+      method: "POST",
+      body: JSON.stringify({
+        item: targetItem,
+        path,
+      }),
+    }).catch((err) => {
+      console.error("Failed to report path", err);
+    });
+
     return path;
   }
 
@@ -102,6 +112,18 @@ export default class Finder {
       });
     }, 100);
 
+    let cleanedRecipes = this.recipes.filter((recipe) => {
+      const isCircularRecipe =
+        recipe.first === recipe.result || recipe.second === recipe.result;
+
+      const containsNothing =
+        recipe.first === "Nothing" ||
+        recipe.second === "Nothing" ||
+        recipe.result === "Nothing";
+
+      return !isCircularRecipe && !containsNothing;
+    });
+
     while (itemQueue.length > 0) {
       itemsProcessed++;
       const { item, recipe } = itemQueue.shift()!;
@@ -112,33 +134,27 @@ export default class Finder {
         return await this.backtrackPath(targetItem, recipe, [...recipesUsed]);
       }
 
-      this.recipes
-        .filter((recipe) => {
-          const hasDiscoveredItems =
-            discoveredItems.has(recipe.first) &&
-            discoveredItems.has(recipe.second);
-          const resultAlreadyDiscovered = discoveredItems.has(recipe.result);
-          const isCircularRecipe =
-            recipe.first === recipe.result || recipe.second === recipe.result;
-          const containsNothing =
-            recipe.first === "Nothing" ||
-            recipe.second === "Nothing" ||
-            recipe.result === "Nothing";
-          return (
-            hasDiscoveredItems &&
-            !resultAlreadyDiscovered &&
-            !isCircularRecipe &&
-            !containsNothing
-          );
-        })
-        .forEach((recipe) => {
-          discoveredItems.add(recipe.result);
-          recipesUsed.add(recipe);
-          itemQueue.push({
-            item: recipe.result,
-            recipe,
-          });
+      cleanedRecipes.forEach((recipe) => {
+        const hasDiscoveredItems =
+          discoveredItems.has(recipe.first) &&
+          discoveredItems.has(recipe.second);
+        if (!hasDiscoveredItems) return;
+
+        const resultAlreadyDiscovered = discoveredItems.has(recipe.result);
+        if (resultAlreadyDiscovered) return;
+
+        discoveredItems.add(recipe.result);
+
+        recipesUsed.add(recipe);
+        itemQueue.push({
+          item: recipe.result,
+          recipe,
         });
+      });
+
+      cleanedRecipes = cleanedRecipes.filter(
+        (r) => !recipesUsed.has(r) && !discoveredItems.has(r.result)
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
