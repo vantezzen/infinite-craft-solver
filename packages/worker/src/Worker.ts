@@ -1,13 +1,11 @@
 import { PrismaClient } from "@repo/db";
 import { ApiRecipe } from "./types";
-import puppeteer, { type Page } from "puppeteer";
 
 const DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
 const THREAD_COUNT = 10;
 
 export default class Worker {
   private prisma = new PrismaClient();
-  private page: Page | null = null;
 
   public async run() {
     console.log("Worker started");
@@ -18,26 +16,9 @@ export default class Worker {
       await this.kickstart();
     }
 
-    const browserOptions = process.env.LOCAL_ENV
-      ? {
-          headless: false,
-        }
-      : {
-          headless: false,
-          executablePath: "/usr/bin/chromium-browser",
-          args: ["--no-sandbox"],
-        };
-
-    const browser = await puppeteer.launch(browserOptions);
-    this.page = await browser.newPage();
-    await this.page.goto("https://neal.fun/infinite-craft/");
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     for (let i = 0; i < THREAD_COUNT; i++) {
       await this.runThread();
     }
-
-    await browser.close();
 
     console.log("Worker finished");
   }
@@ -145,22 +126,20 @@ export default class Worker {
   }
 
   private async fetch(url: string) {
-    const data = (await this.page!.evaluate((url) => {
-      return new Promise((resolve, reject) => {
-        fetch(url)
-          .then((response) => {
-            return response.json();
-          })
-          .then(function (data) {
-            resolve(data);
-          })
-          .catch((error) => {
-            resolve(null);
-          });
-      });
-    }, url)) as ApiRecipe | null;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Solver",
+        Referer: "https://neal.fun/infinite-craft/",
+      },
+    });
 
-    return data;
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch: ${url}; ${response.status}, ${response.statusText}`
+      );
+    }
+
+    return await response.json();
   }
 
   private async queueCombinationsWithItem(item: string) {
