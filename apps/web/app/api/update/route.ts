@@ -11,16 +11,30 @@ export async function GET(request: Request) {
     });
   }
 
-  const recipeResult = await sql<Recipe>`
-    SELECT * FROM "Recipe"
-    ORDER BY result
-  `;
+  const recipes: Recipe[] = [];
+  let offset = 0;
+  const limit = 10000;
+  let hasMore = true;
 
-  const recipes = recipeResult.rows.map((row) => ({
-    first: row.first,
-    second: row.second,
-    result: row.result,
-  }));
+  while (hasMore) {
+    const recipeResult = await sql<Recipe>`
+      SELECT * FROM "Recipe"
+      ORDER BY result
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    if (recipeResult.rows.length > 0) {
+      recipes.push(
+        ...recipeResult.rows.map((row) => ({
+          first: row.first,
+          second: row.second,
+          result: row.result,
+        }))
+      );
+      offset += recipeResult.rows.length;
+    } else {
+      hasMore = false;
+    }
+  }
 
   const client = new S3Client({
     endpoint: process.env.S3_ENDPOINT,
