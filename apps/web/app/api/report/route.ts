@@ -1,6 +1,6 @@
 import { Recipe } from "@/lib/Finder";
 import { decompressRecipes } from "@/lib/compression";
-import { kv } from "@vercel/kv";
+import redis from "@/lib/kv";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 export async function POST(request: Request) {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     path.length < 200
   ) {
     const cachePath = `recipe-${item}`;
-    await kv.set(cachePath, path, { ex: 60 * 60 * 24 * 14 });
+    await redis.set(cachePath, path, { ex: 60 * 60 * 24 * 14 });
 
     return new Response("ok", { status: 200 });
   }

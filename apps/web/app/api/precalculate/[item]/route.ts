@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import redis from "@/lib/kv";
 
 export async function POST(
   request: Request,
@@ -13,6 +13,6 @@ export async function POST(
   const data = await request.json();
   const { path } = data;
   const cachePath = `recipe-${item}`;
-  await kv.set(cachePath, path, { ex: 60 * 60 * 48 });
+  await redis.set(cachePath, path, { ex: 60 * 60 * 48 });
   return new Response("ok");
 }
