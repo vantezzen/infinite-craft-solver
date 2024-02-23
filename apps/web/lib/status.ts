@@ -1,42 +1,22 @@
-import { sql } from "@vercel/postgres";
-
 export default async function getStatus() {
-  const recipeInfo = await sql<{ count: number }>`
-    SELECT COUNT(*) FROM "Recipe"
-  `;
-  const recipes = recipeInfo.rows[0]!.count;
+  const response = await fetch("https://icscdn.vantezzen.io/recipes.json", {
+    cache: "force-cache",
+  });
 
-  const itemInfo = await sql<{ result: string }>`
-    SELECT DISTINCT result FROM "Recipe"
-  `;
-  const items = itemInfo.rows.length;
+  if (!response.ok) {
+    throw new Error("Failed to load recipes");
+  }
 
-  const queuedInfo = await sql<{ count: number }>`
-    SELECT COUNT(*) FROM "QueueItem"
-  `;
-  const queued = queuedInfo.rows[0]!.count;
+  const compressedRecipes = await response.json();
 
-  const recipesInPastHourInfo = await sql<{ count: number }>`
-    SELECT COUNT(*) FROM "Recipe" WHERE "createdAt" > NOW() - INTERVAL '1 hour'
-  `;
-  const recipesInPastHour = recipesInPastHourInfo.rows[0]!.count;
-
-  const queuedPastHourInfo = await sql<{ count: number }>`
-    SELECT COUNT(*) FROM "QueueItem" WHERE "createdAt" > NOW() - INTERVAL '1 hour'
-  `;
-  const queuedPastHour = queuedPastHourInfo.rows[0]!.count;
-
-  const newestItemNameInfo = await sql<{ result: string }>`
-  SELECT "result" FROM "Recipe" GROUP BY "result" ORDER BY MIN("createdAt") DESC LIMIT 1
-  `;
-  const newestItemName = newestItemNameInfo.rows[0]!.result;
+  const items = compressedRecipes.items.length;
+  const recipes = compressedRecipes.recipes.length;
+  const newestItemName =
+    compressedRecipes.items[compressedRecipes.items.length - 1];
 
   return {
     recipes,
     items: items,
-    queued,
-    recipesInPastHour,
-    queuedPastHour,
     newestItemName,
   };
 }
