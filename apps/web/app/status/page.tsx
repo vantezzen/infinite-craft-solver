@@ -3,9 +3,6 @@ import Status from "@/components/Status";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { Suspense } from "react";
 
-export const fetchCache = "force-no-store";
-export const dynamic = "force-dynamic";
-
 function StatusPage() {
   return (
     <div className="min-h-screen flex flex-col justify-between">
