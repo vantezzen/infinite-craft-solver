@@ -5,14 +5,8 @@ import React, { useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 import NotFound from "./NotFound";
 
-function Results({
-  item,
-  path: precalculatedPath,
-}: {
-  item: string;
-  path: Recipe[] | null;
-}) {
-  const [path, setPath] = React.useState<Recipe[] | null>(precalculatedPath);
+function Results({ item }: { item: string }) {
+  const [path, setPath] = React.useState<Recipe[] | null>(null);
   const [error, setError] = React.useState<Error | null>(null);
   const [finder, setFinder] = React.useState<Finder | null>(null);
   const [progress, setProgress] = React.useState<FinderProgess>({
@@ -21,10 +15,6 @@ function Results({
   });
 
   useEffect(() => {
-    if (precalculatedPath) {
-      return;
-    }
-
     const finder = new Finder(setProgress);
     setFinder(finder);
 

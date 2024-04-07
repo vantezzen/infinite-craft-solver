@@ -1,21 +1,52 @@
 {
-  "name": "infinite-craft-solver",
+  "name": "web",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
-    "worker": "turbo worker:run",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.4",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-avatar": "^1.0.4",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-progress": "^1.0.3",
+    "@radix-ui/react-scroll-area": "^1.0.5",
+    "@radix-ui/react-separator": "^1.0.3",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "@tanstack/react-query": "^5.22.2",
+    "@types/string-similarity": "^4.0.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "eslint-config-next": "^14.1.4",
+    "eslint-plugin-unused-imports": "^3.1.0",
+    "lucide-react": "^0.324.0",
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.50.1",
+    "redis": "^4.6.13",
+    "string-similarity": "^4.0.4",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "prettier": "^3.1.1",
-    "turbo": "latest"
-  },
-  "packageManager": "pnpm@8.9.0",
-  "engines": {
-    "node": ">=18"
+    "@next/eslint-plugin-next": "^14.0.4",
+    "@types/eslint": "^8.56.1",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
   }
 }

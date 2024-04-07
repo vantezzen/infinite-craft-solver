@@ -6,8 +6,6 @@ import {
   Card,
 } from "@/components/ui/card";
 import getStatus from "@/lib/status";
-import { ChevronUp } from "lucide-react";
-import Link from "next/link";
 
 export default async function Status() {
   const status = await getStatus();

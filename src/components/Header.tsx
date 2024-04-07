@@ -1,11 +1,22 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { ChevronRight } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Popover, PopoverContent } from "./ui/popover";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import { useRouter } from "next/navigation";
+
+const topItems = [
+  "Human",
+  "Youtube",
+  "Fortnight",
+  "Minecraft",
+  "Anime",
+  "1",
+  "Internet",
+  "Life",
+];
 
 function Header({ items, item }: { items: string[]; item?: string }) {
   const [query, setQuery] = React.useState(item ?? "");
@@ -15,6 +26,8 @@ function Header({ items, item }: { items: string[]; item?: string }) {
   function onSearch() {
     router.push(`/${encodeURIComponent(query)}`);
   }
+
+  const itemsToShow = query ? items : topItems;
 
   return (
     <header className="p-16 flex justify-center">
@@ -51,7 +64,7 @@ function Header({ items, item }: { items: string[]; item?: string }) {
               </div>
             </PopoverAnchor>
             <PopoverContent>
-              {items
+              {itemsToShow
                 .filter((item) =>
                   item.toLowerCase().includes(query.toLowerCase())
                 )

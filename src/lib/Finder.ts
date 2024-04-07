@@ -131,6 +131,7 @@ export default class Finder {
       if (item === targetItem) {
         console.log("Found path", recipesUsed.size);
         clearInterval(updateInterval);
+        // @ts-ignore
         return await this.backtrackPath(targetItem, recipe, [...recipesUsed]);
       }
 
