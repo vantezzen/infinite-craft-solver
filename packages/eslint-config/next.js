@@ -7,7 +7,7 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "prettier",
-    require.resolve("@vercel/style-guide/eslint/next"),
+    "plugin:@next/next/recommended-legacy",
     "eslint-config-turbo",
   ],
   globals: {
