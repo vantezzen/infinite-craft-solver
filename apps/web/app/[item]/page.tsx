@@ -1,7 +1,8 @@
 import App from "@/components/App";
 import React from "react";
 
-function Item({ params: { item } }: { params: { item: string } }) {
+async function Item({ params }: { params: Promise<{ item: string }> }) {
+  const { item } = await params;
   return <App item={decodeURIComponent(item)} />;
 }
 

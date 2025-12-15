@@ -2,7 +2,7 @@ import redis from "@/lib/kv";
 
 export async function POST(
   request: Request,
-  { params: { item } }: { params: { item: string } }
+  { params }: { params: Promise<{ item: string }> }
 ) {
   if (process.env.NODE_ENV !== "development") {
     return new Response("Precalculate is only available in dev environments", {
@@ -10,6 +10,7 @@ export async function POST(
     });
   }
 
+  const { item } = await params;
   const data = await request.json();
   const { path } = data;
   const cachePath = `recipe-${item}`;
