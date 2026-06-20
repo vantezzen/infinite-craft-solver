@@ -24,8 +24,6 @@ services:
         - S3_REGION
         - S3_SECRET_KEY
     restart: unless-stopped
-    env_file:
-      - ./.env
     volumes:
       - .:/app
     environment:
