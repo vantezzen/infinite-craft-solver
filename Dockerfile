@@ -17,7 +17,7 @@ RUN corepack enable pnpm && pnpm fetch
 COPY . .
 
 # 4. Install using the offline cache we just built
-RUN pnpm install --frozen-lockfile --offline
+RUN pnpm install
 
 
 # Rebuild the source code only when needed
