@@ -6,19 +6,27 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# 1. Copy ONLY the lockfile and workspace config first for caching
+# The asterisk (*) ensures it doesn't fail if pnpm-workspace.yaml doesn't exist at the root
+COPY pnpm-lock.yaml pnpm-workspace.yaml* ./
+
+# 2. Fetch dependencies into the pnpm store (this caches heavily!)
+RUN corepack enable pnpm && pnpm fetch
+
+# 3. Now copy the rest of your source code
 COPY . .
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+
+# 4. Install using the offline cache we just built
+RUN pnpm install --frozen-lockfile --offline
 
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
+# Copy the entire app (including all nested workspace node_modules) from deps
+COPY --from=deps /app ./
+
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
