@@ -1,6 +1,7 @@
 import Precalculate from "@/components/Precalculate";
 import { getItemList } from "@/lib/items";
 import React from "react";
+export const dynamic = "force-dynamic";
 
 async function PrecalculatePage() {
   if (process.env.NODE_ENV !== "development") {
