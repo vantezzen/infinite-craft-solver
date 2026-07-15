@@ -5,10 +5,7 @@ services:
     build:
       context: .
       args:
-        - KV_REST_API_READ_ONLY_TOKEN
-        - KV_REST_API_TOKEN
-        - KV_REST_API_URL
-        - KV_URL
+        - REDIS_URL
         - POSTGRES_DATABASE
         - POSTGRES_HOST
         - POSTGRES_PASSWORD
@@ -27,10 +24,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - KV_REST_API_READ_ONLY_TOKEN
-      - KV_REST_API_TOKEN
-      - KV_REST_API_URL
-      - KV_URL
+      - REDIS_URL
       - POSTGRES_DATABASE
       - POSTGRES_HOST
       - POSTGRES_PASSWORD
