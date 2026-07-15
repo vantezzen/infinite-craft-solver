@@ -1,5 +1,5 @@
 import items from "@/data/items.json";
 
-export async function getItemList() {
+export function getItemList() {
   return items;
 }

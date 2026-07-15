@@ -16,51 +16,134 @@ export interface FinderProgess {
   phase: FinderPhase;
 }
 
+type QueueEntry = {
+  cost: number;
+  item: string;
+};
+
+class MinHeap {
+  private entries: QueueEntry[] = [];
+
+  get size(): number {
+    return this.entries.length;
+  }
+
+  push(entry: QueueEntry): void {
+    let index = this.entries.push(entry) - 1;
+
+    while (index > 0) {
+      const parent = (index - 1) >> 1;
+      if (this.entries[parent]!.cost <= entry.cost) break;
+      this.entries[index] = this.entries[parent]!;
+      index = parent;
+    }
+
+    this.entries[index] = entry;
+  }
+
+  pop(): QueueEntry | undefined {
+    const root = this.entries[0];
+    const last = this.entries.pop();
+    if (!root || !last || this.entries.length === 0) return root;
+
+    let index = 0;
+    let left = 1;
+    while (left < this.entries.length) {
+      const right = left + 1;
+      const child =
+        right < this.entries.length &&
+        this.entries[right]!.cost < this.entries[left]!.cost
+          ? right
+          : left;
+      if (this.entries[child]!.cost >= last.cost) break;
+
+      this.entries[index] = this.entries[child]!;
+      index = child;
+      left = index * 2 + 1;
+    }
+
+    this.entries[index] = last;
+    return root;
+  }
+}
+
 export default class Finder {
-  private DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
-  private recipes: Recipe[] = []; // Array to store all recipes
-  private recipeMap: Map<string, Recipe[]> = new Map(); // Map to store recipes for each item
-  private recipesLoaded: boolean = false; // Flag to check if recipes are loaded
-  public items = new Set<string>(this.DEFAULT_ITEMS);
+  private static readonly DEFAULT_ITEMS = ["Water", "Fire", "Wind", "Earth"];
+
+  private recipesByIngredient = new Map<string, Recipe[]>();
+  private recipesLoaded = false;
+  private numRecipes = 0;
+  public items = new Set<string>(Finder.DEFAULT_ITEMS);
 
   constructor(
-    private onProgress: (progress: FinderProgess) => void = () => {}
+    private onProgress: (progress: FinderProgess) => void = () => {},
   ) {}
 
   private async loadRecipes(): Promise<void> {
-    const response = await fetch("https://icscdn.vantezzen.io/recipes.json", {
-      cache: "force-cache",
-    });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_USE_LOCAL
+        ? "/api/recipes"
+        : "https://icscdn.vantezzen.io/recipes.json",
+      {
+        cache: "force-cache",
+      },
+    );
 
     if (!response.ok) {
       throw new Error("Failed to load recipes");
     }
 
-    const recipes = await response.json();
-    if ("compressed" in recipes && recipes.compressed) {
-      this.items = new Set(recipes.items);
-      this.recipes = decompressRecipes(recipes);
+    const data = await response.json();
+    let recipes: Recipe[];
+    if ("compressed" in data && data.compressed) {
+      this.items = new Set(data.items);
+      recipes = decompressRecipes(data);
     } else {
-      this.items = new Set<string>(
-        recipes
-          .map((recipe: Recipe) => [recipe.first, recipe.second, recipe.result])
-          .flat()
-      );
-      this.recipes = recipes;
-    }
-
-    for (const recipe of this.recipes) {
-      if (!this.recipeMap.has(recipe.result)) {
-        this.recipeMap.set(recipe.result, []);
+      recipes = data;
+      this.items = new Set(Finder.DEFAULT_ITEMS);
+      for (const recipe of recipes) {
+        this.items.add(recipe.first);
+        this.items.add(recipe.second);
+        this.items.add(recipe.result);
       }
-      this.recipeMap.get(recipe.result)!.push(recipe);
+    }
+    this.numRecipes = recipes.length;
+
+    for (const recipe of recipes) {
+      if (
+        recipe.first === recipe.result ||
+        recipe.second === recipe.result ||
+        recipe.first === "Nothing" ||
+        recipe.second === "Nothing" ||
+        recipe.result === "Nothing"
+      ) {
+        continue;
+      }
+
+      this.addIngredientRecipe(recipe.first, recipe);
+      if (recipe.second !== recipe.first) {
+        this.addIngredientRecipe(recipe.second, recipe);
+      }
     }
 
     this.recipesLoaded = true;
   }
 
+  private addIngredientRecipe(ingredient: string, recipe: Recipe): void {
+    const recipes = this.recipesByIngredient.get(ingredient);
+    if (recipes) {
+      recipes.push(recipe);
+    } else {
+      this.recipesByIngredient.set(ingredient, [recipe]);
+    }
+  }
+
   async findItem(targetItem: string): Promise<Recipe[]> {
-    if (this.DEFAULT_ITEMS.includes(targetItem)) {
+    this.onProgress({
+      current: this.numRecipes,
+      phase: FinderPhase.Search,
+    });
+    if (Finder.DEFAULT_ITEMS.includes(targetItem)) {
       return [];
     }
 
@@ -72,160 +155,113 @@ export default class Finder {
       throw new Error("Item not found");
     }
 
-    console.log(`Loaded ${this.recipes.length} recipes`);
-
-    // Use a cache or directly proceed with the search if not available
-    const path = await this.findShortestPath(targetItem);
+    const path = this.findShortestPath(targetItem);
     if (!path) {
       throw new Error("Item cannot be crafted");
     }
 
-    fetch("/api/report", {
-      method: "POST",
-      body: JSON.stringify({
-        item: targetItem,
-        path,
-      }),
-    }).catch((err) => {
-      console.error("Failed to report path", err);
-    });
-
     return path;
   }
 
-  private async findShortestPath(targetItem: string): Promise<Recipe[] | null> {
-    const itemQueue: {
-      item: string;
-      recipe: Recipe | null;
-    }[] = this.DEFAULT_ITEMS.map((item) => ({
-      item,
-      recipe: null,
-    }));
-    const recipesUsed = new Set<Recipe>();
-    const discoveredItems = new Set<string>(this.DEFAULT_ITEMS);
-    let itemsProcessed = 0;
+  private findShortestPath(targetItem: string): Recipe[] | null {
+    const costs = new Map<string, number>();
+    const settledItems = new Set<string>();
+    const recipeForItem = new Map<string, Recipe>();
+    const queue = new MinHeap();
+    let recipesProcessed = 0;
 
-    const updateInterval = setInterval(() => {
-      this.onProgress({
-        current: itemsProcessed,
-        phase: FinderPhase.Search,
-      });
-    }, 100);
-
-    let cleanedRecipes = this.recipes.filter((recipe) => {
-      const isCircularRecipe =
-        recipe.first === recipe.result || recipe.second === recipe.result;
-
-      const containsNothing =
-        recipe.first === "Nothing" ||
-        recipe.second === "Nothing" ||
-        recipe.result === "Nothing";
-
-      return !isCircularRecipe && !containsNothing;
-    });
-
-    while (itemQueue.length > 0) {
-      itemsProcessed++;
-      const { item, recipe } = itemQueue.shift()!;
-
-      if (item === targetItem) {
-        console.log("Found path", recipesUsed.size);
-        clearInterval(updateInterval);
-        return await this.backtrackPath(targetItem, recipe, [...recipesUsed]);
-      }
-
-      cleanedRecipes.forEach((recipe) => {
-        const hasDiscoveredItems =
-          discoveredItems.has(recipe.first) &&
-          discoveredItems.has(recipe.second);
-        if (!hasDiscoveredItems) return;
-
-        const resultAlreadyDiscovered = discoveredItems.has(recipe.result);
-        if (resultAlreadyDiscovered) return;
-
-        discoveredItems.add(recipe.result);
-
-        recipesUsed.add(recipe);
-        itemQueue.push({
-          item: recipe.result,
-          recipe,
-        });
-      });
-
-      cleanedRecipes = cleanedRecipes.filter(
-        (r) => !recipesUsed.has(r) && !discoveredItems.has(r.result)
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    for (const item of Finder.DEFAULT_ITEMS) {
+      costs.set(item, 0);
+      queue.push({ cost: 0, item });
     }
 
-    clearInterval(updateInterval);
+    this.onProgress({ current: 0, phase: FinderPhase.Search });
+
+    while (queue.size > 0) {
+      const current = queue.pop()!;
+      if (
+        settledItems.has(current.item) ||
+        costs.get(current.item) !== current.cost
+      ) {
+        continue;
+      }
+
+      settledItems.add(current.item);
+      if (current.item === targetItem) {
+        this.onProgress({
+          current: recipesProcessed,
+          phase: FinderPhase.Search,
+        });
+        return this.buildPath(targetItem, recipeForItem);
+      }
+
+      for (const recipe of this.recipesByIngredient.get(current.item) ?? []) {
+        if (
+          !settledItems.has(recipe.first) ||
+          !settledItems.has(recipe.second)
+        ) {
+          continue;
+        }
+
+        recipesProcessed++;
+        if (recipesProcessed % 1000 === 0) {
+          this.onProgress({
+            current: recipesProcessed,
+            phase: FinderPhase.Search,
+          });
+        }
+
+        const cost =
+          costs.get(recipe.first)! +
+          (recipe.first === recipe.second ? 0 : costs.get(recipe.second)!) +
+          1;
+
+        if (cost >= (costs.get(recipe.result) ?? Infinity)) {
+          continue;
+        }
+
+        costs.set(recipe.result, cost);
+        recipeForItem.set(recipe.result, recipe);
+        queue.push({ cost, item: recipe.result });
+      }
+    }
+
+    this.onProgress({
+      current: recipesProcessed,
+      phase: FinderPhase.Search,
+    });
     return null;
   }
 
-  private async backtrackPath(
+  private buildPath(
     targetItem: string,
-    recipe: Recipe | null,
-    recipesUsed: Recipe[]
-  ): Promise<Recipe[]> {
-    if (!recipe) {
-      return [];
-    }
-    // "recipesUsed" contains recipes that are not part of the shortest path to the target item
-    // We want to backtrack from the target item to the source items (this.DEFAULT_ITEMS) to find the shortest path
+    recipeForItem: Map<string, Recipe>,
+  ): Recipe[] {
+    const path: Recipe[] = [];
+    const craftedItems = new Set(Finder.DEFAULT_ITEMS);
+    const stack = [{ item: targetItem, ready: false }];
 
-    const recipes: Recipe[] = [recipe];
-    const itemQueue = [recipe?.first, recipe?.second];
-    const discoveredItems = new Set<string>([targetItem]);
+    this.onProgress({ current: 0, phase: FinderPhase.Backtrack });
 
-    const updateInfo = () => {
-      this.onProgress({
-        current: recipes.length,
-        phase: FinderPhase.Backtrack,
-      });
-    };
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (craftedItems.has(current.item)) continue;
 
-    const updateInterval = setInterval(() => {
-      updateInfo();
-    }, 50);
-    updateInfo();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+      const recipe = recipeForItem.get(current.item);
+      if (!recipe) continue;
 
-    while (itemQueue.length > 0) {
-      const item = itemQueue.shift()!;
-
-      if (this.DEFAULT_ITEMS.includes(item)) {
+      if (current.ready) {
+        path.push(recipe);
+        craftedItems.add(recipe.result);
         continue;
       }
 
-      const recipeUsedForItem = recipesUsed.find(
-        (recipe) => recipe.result === item
-      );
-      if (!recipeUsedForItem) {
-        continue;
-      }
-
-      recipes.push(recipeUsedForItem);
-      discoveredItems.add(recipeUsedForItem.first);
-      discoveredItems.add(recipeUsedForItem.second);
-      itemQueue.push(recipeUsedForItem.first, recipeUsedForItem.second);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      stack.push({ item: current.item, ready: true });
+      stack.push({ item: recipe.second, ready: false });
+      stack.push({ item: recipe.first, ready: false });
     }
 
-    clearInterval(updateInterval);
-    return this.removeDuplicates(recipes.reverse());
-  }
-
-  private removeDuplicates(path: Recipe[]): Recipe[] {
-    const seen = new Set<string>();
-    return path.filter((recipe) => {
-      const key = `${recipe.first}-${recipe.second}-${recipe.result}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
+    this.onProgress({ current: path.length, phase: FinderPhase.Backtrack });
+    return path;
   }
 }

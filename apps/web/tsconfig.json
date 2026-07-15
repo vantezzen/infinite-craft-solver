@@ -8,17 +8,27 @@
     "esModuleInterop": true,
     "incremental": false,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "lib": [
+      "es2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
     "noEmit": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": [
+        "*"
+      ]
     },
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
@@ -29,7 +39,10 @@
     "next.config.js",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

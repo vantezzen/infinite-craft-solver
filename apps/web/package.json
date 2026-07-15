@@ -6,10 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test": "tsc lib/Finder.test.ts lib/Finder.ts lib/compression.ts --module commonjs --moduleResolution node --target es2022 --lib es2022,dom --esModuleInterop --strict --noUncheckedIndexedAccess --skipLibCheck --outDir /tmp/infinite-craft-solver-tests && node --test /tmp/infinite-craft-solver-tests/Finder.test.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.515.0",
     "@hookform/resolvers": "^3.3.4",
     "@prisma/extension-accelerate": "^0.6.3",
     "@radix-ui/react-alert-dialog": "^1.0.5",
@@ -32,7 +32,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.1",
-    "redis": "^6.1.0",
     "string-similarity": "^4.0.4",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",

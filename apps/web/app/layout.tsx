@@ -24,6 +24,11 @@ export default function RootLayout({
           src="https://scripts.simpleanalyticscdn.com/latest.js"
           data-collect-dnt="true"
         />
+        <Script
+          defer
+          src="https://a.vantezzen.io/script.js"
+          data-website-id="1a3822cc-c205-4e9a-b19e-98b72ed4fe27"
+        />
         <noscript>
           {/* eslint-disable @next/next/no-img-element */}
           <img
@@ -32,7 +37,11 @@ export default function RootLayout({
             referrerPolicy="no-referrer-when-downgrade"
           />
         </noscript>
-        <Script defer data-domain="ics.vantezzen.io" src="https://a.vantezzen.io/js/script.js"></Script>
+        <Script
+          defer
+          data-domain="ics.vantezzen.io"
+          src="https://a.vantezzen.io/js/script.js"
+        ></Script>
       </body>
     </html>
   );
